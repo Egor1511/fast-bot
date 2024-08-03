@@ -2,13 +2,13 @@ import logging
 import os
 
 import aiohttp
-from aiogram import types, Router, F
+from aiogram import types, Router, F, Bot
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
-from fast_bot.bot.keyboards.user_keyboard import main_page_kb, home_page_kb
+from keyboards.user_keyboard import main_page_kb, home_page_kb
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 logger = logging.getLogger(__name__)
@@ -22,6 +22,8 @@ async def cmd_start(message: Message):
 
 
 class Form(StatesGroup):
+    waiting_for_photo = State()
+    waiting_for_video = State()
     waiting_for_message = State()
 
 
@@ -43,12 +45,12 @@ async def get_messages_command(message: types.Message):
                         await message.answer("Сообщений пока нет.",
                                              reply_markup=home_page_kb())
                         return
+                    print(response_data)
                     text = "\n\n".join(
                         [
                             f"Имя: {msg['user']['first_name']} {msg['user']['last_name']}\n"
                             f"Сообщение: {msg['content']['text']}\n"
-                            f"Фото: {msg['content']['photo'] if msg['content']['photo'] else 'Отсутствует'}\n"
-                            f"Видео: {msg['content']['video'] if msg['content']['video'] else 'Отсутствует'}"
+                            f"Фото: {msg['content']['photo'] if msg['content']['photo'] else 'Отсутствует'}"
                             for msg in response_data])
                     await message.answer(text, reply_markup=home_page_kb())
                 else:
@@ -63,26 +65,26 @@ async def get_messages_command(message: types.Message):
 
 
 @user_router.message(F.text == '📝 Новое сообщение')
-async def write_message_command(message: types.Message, state: FSMContext):
+async def write_photo_command(message: types.Message, state: FSMContext):
     await state.clear()
-    await message.answer("Отправьте сообщение:")
+    await message.answer("Отправьте сообщение:", reply_markup=home_page_kb())
     await state.set_state(Form.waiting_for_message)
 
 
 @user_router.message(F.text, Form.waiting_for_message)
 async def post_message_command(message: types.Message, state: FSMContext):
+    data = await state.get_data()
     first_name = message.from_user.first_name
     username = message.from_user.username
     content = message.text
     chat_id = message.chat.id
-
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(f"{API_URL}/api/v1/message/",
                                     params={"first_name": first_name,
                                             "username": username,
                                             "content": content,
-                                            "chat_id": chat_id, }) as response:
+                                            "chat_id": chat_id}) as response:
                 response_data = await response.json()
                 if response.status == 200:
                     await message.answer("Сообщение отправлено!",

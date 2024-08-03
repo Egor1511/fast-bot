@@ -4,7 +4,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    BOT_TOKEN: str
     MONGO_HOST: str
     MONGO_PORT: int
     MONGO_DB: str

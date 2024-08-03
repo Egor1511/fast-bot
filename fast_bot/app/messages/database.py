@@ -1,6 +1,6 @@
 import motor.motor_asyncio
 
-from app.config import get_mongo_url
+from config import get_mongo_url
 
 MONGO_DETAILS = get_mongo_url()
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_DETAILS)

@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from create_bot import bot, dp
-from fast_bot.bot.hendlers.user_handler import user_router
+from hendlers.user_handler import user_router
 
 
 async def main():

@@ -11,7 +11,6 @@ class User(BaseModel):
 class Content(BaseModel):
     text: str | None = None
     photo: str | None = None
-    video: str | None = None
 
 
 class Message(BaseModel):
